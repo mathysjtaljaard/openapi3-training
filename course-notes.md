@@ -8,3 +8,16 @@
 
 [OPEN API](42crunch.vscode-openapi)
  - Handy swagger ui renderer for your Spec
+
+
+## Open API Generator
+
+[OpenApi Generator](https://openapi-generator.tech/)
+
+### Generating Client code
+
+> docker run --rm -v ${PWD}:/local \
+>  openapitools/openapi-generator-cli generate \
+>  -i /local/spec/openapi-3.0.2.yml 
+>  -g java 
+>  -o /local/generated-code
