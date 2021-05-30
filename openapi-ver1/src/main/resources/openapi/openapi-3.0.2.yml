@@ -157,6 +157,53 @@ paths:
                 type: string
                 format: uri
                 example: https://example.com/v4/customers/{assignedIdValue}
+  /v4/customers/{customerId}/orders:
+    parameters:
+      - $ref: "#/components/parameters/customerIdParameter"
+    post:
+      description: Place order
+      tags:
+        - Beer ordering service
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/beerOrder"
+      responses:
+        "201":
+          description: Order Created
+          headers:
+            location:
+              description: Refernce to created order
+              schema:
+                type: string
+                format: uri
+        "400":
+          description: Bad Request
+        "404":
+          description: Not Found
+        "409":
+          description: Conflict
+      callbacks:
+        orderStatusChange:
+          "${request.body#/orderStatusCallbackUrl}":
+            description: Webhook for order status change notification
+            post:
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        orderId:
+                          type: string
+                          format: uuid
+                        orderStatus:
+                          type: string
+              responses:
+                "200":
+                  description: Status Changed
 components:
   schemas:
     address:
@@ -184,7 +231,7 @@ components:
     customer:
       type: object
       properties:
-        customer-id:
+        customerId:
           type: string
           format: uuid
           nullable: false
@@ -244,6 +291,54 @@ components:
         - IPA
         - WHEAT
         - LAGER
+    beerOrder:
+      type: object
+      required:
+        - customerId
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        customerId:
+          type: string
+          format: uuid
+        customerRef:
+          type: string
+          nullable: true
+        beerOrderLines:
+          type: array
+          items:
+            $ref: "#/components/schemas/beerOrderLine"
+        orderStatusCallbackUrl:
+          type: string
+          format: uri
+    beerOrderLine:
+      type: object
+      required:
+        - upc
+        - orderQuantity
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        beerId:
+          type: string
+          format: uuid
+          readOnly: true
+        upc:
+          type: string
+        orderQuantity:
+          maximum: 999
+          minimum: 1
+          type: integer
+        quantityAllocated:
+          type: integer
+          nullable: true
+          readOnly: true
     PagedResponse:
       type: object
       properties:
@@ -318,6 +413,14 @@ components:
       name: beerId
       in: path
       description: Retrieve beer given beer id
+      required: true
+      schema:
+        type: string
+        format: uuid
+    customerIdParameter:
+      name: customer
+      in: path
+      description: Retrieve customer given customer id
       required: true
       schema:
         type: string
