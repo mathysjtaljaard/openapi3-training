@@ -1,0 +1,324 @@
+openapi: "3.0.2"
+info:
+  title: API Title
+  version: "1.0"
+servers:
+  - url: https://api.server.test/v1
+    description: test server
+  - url: http://localhost:8888/v1
+    description: local test server
+  - url: https://qa.example.com
+  - url: https://prod.example.com
+paths:
+  /v1/listbeers:
+    get:
+      operationId: listBeersV1
+      tags:
+        - beers
+      parameters:
+        - $ref: "#/components/parameters/pageNumberParameter"
+        - $ref: "#/components/parameters/pageSizeParameter"
+      description: returns a list of beers
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/beerlist"
+        "404":
+          description: Not Found
+  /v3/createBeer:
+    post:
+      description: Create a new tasty Beer
+      summary: It's time to introduce a new beer
+      tags:
+        - beers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/beer"
+      responses:
+        "201":
+          description: Beer Created
+          headers:
+            location:
+              description: Location of created beer object
+              schema:
+                type: string
+                format: uri
+                example: https://example.com/v2/beers/{beerId}
+        "400":
+          description: Bad request
+        "409":
+          description: Conflict
+
+  /info:
+    get:
+      description: Returns the current information
+      responses:
+        "200":
+          description: OK
+  /test:
+    get:
+      responses:
+        "200":
+          description: OK
+  /v2/beers/{beerId}:
+    get:
+      tags:
+        - beers
+      parameters:
+        - $ref: "#/components/parameters/beerIdParameter"
+      responses:
+        "200":
+          description: Found beer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/beer"
+        "404":
+          description: Not Found
+    put:
+      summary: Update the beer
+      description: Updating the beer
+      tags:
+        - beers
+      parameters:
+        - $ref: "#/components/parameters/beerIdParameter"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/beer"
+      responses:
+        "204":
+          description: Beer Updated
+        "404":
+          description: Not Found
+        "409":
+          description: Conflict
+    delete:
+      description: Delete beer, it was bad
+      tags:
+        - beers
+      parameters:
+        - $ref: "#/components/parameters/beerIdParameter"
+      responses:
+        "200":
+          description: Beer Deleted
+        "404":
+          description: Not Found
+  /v3/customers:
+    get:
+      summary: List of customers
+      description: |
+        List of customers in the system which is pageable
+        and will be something else
+        > more things to know
+        1. hello
+        2. else
+      tags:
+        - customers
+      parameters:
+        - $ref: "#/components/parameters/pageNumberParameter"
+        - $ref: "#/components/parameters/pageSizeParameter"
+      responses:
+        "200":
+          description: List of Customers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/customerPagedList"
+  /v4/customers:
+    post:
+      summary: Creating A new Customer
+      description: |
+        When creating a new Customer the following needs to be true:
+        1. Customer needs name and address
+      tags:
+        - customers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/customer"
+      responses:
+        "201":
+          description: Customer Created
+          headers:
+            location:
+              description: Location of the creatd customer
+              schema:
+                type: string
+                format: uri
+                example: https://example.com/v4/customers/{assignedIdValue}
+components:
+  schemas:
+    address:
+      type: object
+      properties:
+        address1:
+          type: string
+        address2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: integer
+          maxLength: 5
+          minLength: 5
+    customerPagedList:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/PagedResponse"
+      properties:
+        content:
+          $ref: "#/components/schemas/customer"
+    customer:
+      type: object
+      properties:
+        customer-id:
+          type: string
+          format: uuid
+          nullable: false
+          readOnly: true
+        first-name:
+          type: string
+        last-name:
+          type: string
+        last-login-date:
+          type: string
+          format: date
+        address:
+          $ref: "#/components/schemas/address"
+        status:
+          type: string
+          enum:
+            - "shop lifter"
+            - "check bouncer"
+            - "good standing"
+    beer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+        style:
+          $ref: "#/components/schemas/beerstyles"
+        upc:
+          type: string
+        price:
+          type: number
+        quantity:
+          type: integer
+        brewery:
+          $ref: "#/components/schemas/brewery"
+    beerlist:
+      type: array
+      minItems: 0
+      maxItems: 100
+      items:
+        $ref: "#/components/schemas/beer"
+    brewery:
+      type: object
+      properties:
+        name:
+          type: string
+        location:
+          type: string
+    beerstyles:
+      type: string
+      enum:
+        - ALE
+        - PALE_ALE
+        - IPA
+        - WHEAT
+        - LAGER
+    PagedResponse:
+      type: object
+      properties:
+        pageable:
+          $ref: "#/components/schemas/PagedResponse_pageable"
+        totalPages:
+          type: integer
+          format: int32
+        last:
+          type: boolean
+        totalElements:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        number:
+          type: integer
+          format: int32
+        numberOfElements:
+          type: integer
+          format: int32
+        sort:
+          $ref: "#/components/schemas/PagedResponse_pageable_sort"
+        first:
+          type: boolean
+    PagedResponse_pageable_sort:
+      type: object
+      properties:
+        sorted:
+          type: boolean
+        unsorted:
+          type: boolean
+    PagedResponse_pageable:
+      type: object
+      properties:
+        sort:
+          $ref: "#/components/schemas/PagedResponse_pageable_sort"
+        offset:
+          type: integer
+          format: int32
+        pageNumber:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        paged:
+          type: boolean
+        unpaged:
+          type: boolean
+  parameters:
+    pageNumberParameter:
+      name: pageNumber
+      in: query
+      style: form
+      explode: true
+      description: Given Page Number
+      schema:
+        type: integer
+        format: int32
+        default: 0
+    pageSizeParameter:
+      name: pageSize
+      in: query
+      description: Given Number of Results to return per page
+      schema:
+        type: integer
+        format: int32
+        default: 100
+    beerIdParameter:
+      name: beerId
+      in: path
+      description: Retrieve beer given beer id
+      required: true
+      schema:
+        type: string
+        format: uuid
