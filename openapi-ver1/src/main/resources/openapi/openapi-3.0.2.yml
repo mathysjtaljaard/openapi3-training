@@ -57,12 +57,15 @@ paths:
 
   /info:
     get:
+      security:
+        - BasicAuth: []
       description: Returns the current information
       responses:
         "200":
           description: OK
   /test:
     get:
+      security: []
       responses:
         "200":
           description: OK
@@ -425,3 +428,14 @@ components:
       schema:
         type: string
         format: uuid
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+    JwtAuthToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - BasicAuth: []
+  - JwtAuthToken: []
